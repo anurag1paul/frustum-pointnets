@@ -15,6 +15,7 @@ from model_util import NUM_HEADING_BIN, NUM_SIZE_CLUSTER, NUM_OBJECT_POINT
 from model_util import point_cloud_masking, get_center_regression_net
 from model_util import placeholder_inputs, parse_output_to_tensors, get_loss
 
+
 def get_instance_seg_v1_net(point_cloud, one_hot_vec,
                             is_training, bn_decay, end_points):
     ''' 3D instance segmentation PointNet v1 network.

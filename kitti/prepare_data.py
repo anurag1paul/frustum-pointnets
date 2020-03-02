@@ -26,10 +26,12 @@ def in_hull(p, hull):
         hull = Delaunay(hull)
     return hull.find_simplex(p)>=0
 
+
 def extract_pc_in_box3d(pc, box3d):
     ''' pc: (N,3), box3d: (8,3) '''
     box3d_roi_inds = in_hull(pc[:,0:3], box3d)
     return pc[box3d_roi_inds,:], box3d_roi_inds
+
 
 def extract_pc_in_box2d(pc, box2d):
     ''' pc: (N,2), box2d: (xmin,ymin,xmax,ymax) '''
@@ -40,7 +42,8 @@ def extract_pc_in_box2d(pc, box2d):
     box2d_corners[3,:] = [box2d[0],box2d[3]] 
     box2d_roi_inds = in_hull(pc[:,0:2], box2d_corners)
     return pc[box2d_roi_inds,:], box2d_roi_inds
-     
+
+
 def demo():
     import mayavi.mlab as mlab
     from viz_util import draw_lidar, draw_lidar_simple, draw_gt_boxes3d
@@ -129,9 +132,9 @@ def demo():
     mlab.show(1)
     raw_input()
 
+
 def random_shift_box2d(box2d, shift_ratio=0.1):
-    ''' Randomly shift box center, randomly scale width and height 
-    '''
+    ''' Randomly shift box center, randomly scale width and height '''
     r = shift_ratio
     xmin,ymin,xmax,ymax = box2d
     h = ymax-ymin
@@ -143,7 +146,8 @@ def random_shift_box2d(box2d, shift_ratio=0.1):
     h2 = h*(1+np.random.random()*2*r-r) # 0.9 to 1.1
     w2 = w*(1+np.random.random()*2*r-r) # 0.9 to 1.1
     return np.array([cx2-w2/2.0, cy2-h2/2.0, cx2+w2/2.0, cy2+h2/2.0])
- 
+
+
 def extract_frustum_data(idx_filename, split, output_filename, viz=False,
                        perturb_box2d=False, augmentX=1, type_whitelist=['Car']):
     ''' Extract point clouds and corresponding annotations in frustums
@@ -153,7 +157,7 @@ def extract_frustum_data(idx_filename, split, output_filename, viz=False,
         
     Input:
         idx_filename: string, each line of the file is a sample ID
-        split: string, either trianing or testing
+        split: string, either training or testing
         output_filename: string, the name for output .pickle file
         viz: bool, whether to visualize extracted data
         perturb_box2d: bool, whether to perturb the box2d
@@ -185,7 +189,7 @@ def extract_frustum_data(idx_filename, split, output_filename, viz=False,
         objects = dataset.get_label_objects(data_idx)
         pc_velo = dataset.get_lidar(data_idx)
         pc_rect = np.zeros_like(pc_velo)
-        pc_rect[:,0:3] = calib.project_velo_to_rect(pc_velo[:,0:3])
+        pc_rect[:, 0:3] = calib.project_velo_to_rect(pc_velo[:, 0:3])
         pc_rect[:,3] = pc_velo[:,3]
         img = dataset.get_image(data_idx)
         img_height, img_width, img_channel = img.shape
@@ -200,11 +204,11 @@ def extract_frustum_data(idx_filename, split, output_filename, viz=False,
             for _ in range(augmentX):
                 # Augment data by box2d perturbation
                 if perturb_box2d:
-                    xmin,ymin,xmax,ymax = random_shift_box2d(box2d)
+                    xmin, ymin, xmax, ymax = random_shift_box2d(box2d)
                     print(box2d)
-                    print(xmin,ymin,xmax,ymax)
+                    print(xmin, ymin, xmax, ymax)
                 else:
-                    xmin,ymin,xmax,ymax = box2d
+                    xmin, ymin, xmax, ymax = box2d
                 box_fov_inds = (pc_image_coord[:,0]<xmax) & \
                     (pc_image_coord[:,0]>=xmin) & \
                     (pc_image_coord[:,1]<ymax) & \
@@ -277,6 +281,7 @@ def extract_frustum_data(idx_filename, split, output_filename, viz=False,
                 colormap='gnuplot', scale_factor=1, figure=fig)
             raw_input()
 
+
 def get_box3d_dim_statistics(idx_filename):
     ''' Collect and dump 3D bounding box statistics '''
     dataset = kitti_object(os.path.join(ROOT_DIR,'dataset/KITTI/object'))
@@ -299,6 +304,7 @@ def get_box3d_dim_statistics(idx_filename):
         pickle.dump(type_list, fp)
         pickle.dump(dimension_list, fp)
         pickle.dump(ry_list, fp)
+
 
 def read_det_file(det_filename):
     ''' Parse lines in 2D detection output files '''
@@ -421,6 +427,7 @@ def extract_frustum_data_rgb_detection(det_filename, split, output_filename,
                 colormap='gnuplot', scale_factor=1, figure=fig)
             raw_input()
 
+
 def write_2d_rgb_detection(det_filename, split, result_dir):
     ''' Write 2D detection results for KITTI evaluation.
         Convert from Wei's format to KITTI format. 
@@ -461,6 +468,7 @@ def write_2d_rgb_detection(det_filename, split, result_dir):
             fout.write(line+'\n')
         fout.close() 
 
+
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--demo', action='store_true', help='Run demo.')
@@ -482,7 +490,7 @@ if __name__=='__main__':
         output_prefix = 'frustum_carpedcyc_'
 
     if args.gen_train:
-        extract_frustum_data(\
+        extract_frustum_data(
             os.path.join(BASE_DIR, 'image_sets/train.txt'),
             'training',
             os.path.join(BASE_DIR, output_prefix+'train.pickle'), 
@@ -490,7 +498,7 @@ if __name__=='__main__':
             type_whitelist=type_whitelist)
 
     if args.gen_val:
-        extract_frustum_data(\
+        extract_frustum_data(
             os.path.join(BASE_DIR, 'image_sets/val.txt'),
             'training',
             os.path.join(BASE_DIR, output_prefix+'val.pickle'),
@@ -498,7 +506,7 @@ if __name__=='__main__':
             type_whitelist=type_whitelist)
 
     if args.gen_val_rgb_detection:
-        extract_frustum_data_rgb_detection(\
+        extract_frustum_data_rgb_detection(
             os.path.join(BASE_DIR, 'rgb_detections/rgb_detection_val.txt'),
             'training',
             os.path.join(BASE_DIR, output_prefix+'val_rgb_detection.pickle'),
